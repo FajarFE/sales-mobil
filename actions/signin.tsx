@@ -2,64 +2,70 @@
 
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/libs/auth";
-import { loginUserSchema } from "@/zod/signin";
+import { loginUserSchema } from "@/types/signin";
 import prisma from "@/libs/db";
 import { getUserFromDb } from "@/libs/credentials";
+import { redirect } from "next/navigation";
 
-const defaultValues = {
-	email: "",
-	password: "",
-};
-
-export async function login(prevState: any, formData: FormData) {
-	try {
-		const email = formData.get("email");
-		const password = formData.get("password");
-
-		const validatedFields = loginUserSchema.safeParse({
-			email: email,
-			password: password,
-		});
-
-		if (!validatedFields.success) {
-			return {
-				message: "validation error",
-				errors: validatedFields.error.flatten().fieldErrors,
-			};
-		}
-
-		await signIn("credentials", formData);
-		const checkVerifyEmail = await getUserFromDb(email as string);
-		console.log(checkVerifyEmail);
-		return {
-			message: "success",
-			errors: {},
-		};
-	} catch (error) {
-		if (error instanceof AuthError) {
-			switch (error.type) {
-				case "CredentialsSignin":
-					return {
-						message: "credentials error",
-						errors: {
-							...defaultValues,
-							credentials: "incorrect email or password",
-						},
-					};
-				default:
-					return {
-						message: "unknown error",
-						errors: {
-							...defaultValues,
-							unknown: "unknown error",
-						},
-					};
-			}
-		}
-		throw error;
-	}
+interface LoginFormState {
+	errors: {
+		email?: string[];
+		password?: string[];
+		_form?: string[];
+	};
+	success?: boolean;
 }
 
-export async function logout() {
-	await signOut();
+export async function login(
+	formState: LoginFormState,
+	formData: FormData
+): Promise<LoginFormState> {
+	const email = formData.get("email") as string;
+	const password = formData.get("password") as string;
+
+	const validatedFields = loginUserSchema.safeParse({
+		email: email,
+		password: password,
+	});
+
+	if (!validatedFields.success) {
+		return {
+			errors: validatedFields.error.flatten().fieldErrors,
+			success: false,
+		};
+	}
+
+	return signIn("credentials", formData)
+		.then(() => getUserFromDb(email))
+		.then((user) => {
+			if (!user) {
+				return {
+					errors: {
+						_form: ["User not found"],
+					},
+					success: false,
+				};
+			}
+			return {
+				errors: {},
+				success: true,
+			};
+		})
+		.catch((error) => {
+			console.log(error);
+			if (error instanceof AuthError) {
+				return {
+					errors: {
+						_form: [error.message],
+					},
+					success: false,
+				};
+			}
+			return {
+				errors: {
+					_form: ["An unexpected error occurred. Please try again."],
+				},
+				success: false,
+			};
+		});
 }

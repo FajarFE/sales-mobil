@@ -2,7 +2,7 @@
 import { generatePasswordHash, getUserFromDb } from "@/libs/credentials";
 import prisma from "@/libs/db";
 import { sendVerificationEmail } from "@/libs/email";
-import { signUpSchema } from "@/zod/signup";
+import { signUpSchema } from "@/types/signup";
 import { randomBytes } from "crypto";
 import { User } from "next-auth";
 import { redirect } from "next/navigation";

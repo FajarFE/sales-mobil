@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
+import { Toaster } from "@/components/ui/toaster";
+import Providers from "@/libs/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,10 +24,10 @@ export default function RootLayout({
 			<body className={inter.className}>
 				<main className='flex min-h-screen flex-col items-center justify-between p-24'>
 					<div className='z-10 items-center font-mono text-sm lg:flex'>
-						{/* Now, let's provide context with our Providers component */}
-						<SessionProvider>{children}</SessionProvider>
+						<Providers>{children}</Providers>
 					</div>
 				</main>
+				<Toaster />
 			</body>
 		</html>
 	);

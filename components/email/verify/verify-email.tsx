@@ -5,6 +5,7 @@ import { findUserByEmail, verifyEmail } from "@/libs/email";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { redirect } from "next/navigation";
 
 // Defining the Email Verification Component
 export default function VerifyEmail() {
@@ -46,6 +47,7 @@ export default function VerifyEmail() {
 
 				// Updating result message and indicating loading completion
 				setResult("Email verified successfully. Please relogin.");
+				redirect(`/login`);
 				setIsLoading(false);
 			} catch (error) {
 				console.error("Error verifying email:", error);
